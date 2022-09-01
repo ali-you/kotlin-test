@@ -3,12 +3,14 @@ package com.example.myapplication
 import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.net.toUri
@@ -73,9 +75,16 @@ class MainActivity : AppCompatActivity() {
             val file: File = File(path)
 
 
+
+            val imageFile = File(getRealPathFromURI(Uri.parse(MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString()+"/846")))
+
+            Log.d("uri to path", imageFile.path)
+
+
             val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
 //            val clip = ClipData.newUri(contentResolver, "URI", Uri.parse(MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString()+"/846"))
-            val clip = ClipData.newUri(contentResolver, "URI", Uri.parse(path))
+            val uri = Uri.fromFile(imageFile)
+            val clip = ClipData.newUri(contentResolver, "URI", uri)
 //            val clip = ClipData.newUri(contentResolver, "URI", file.toUri())
 
             //this.grantUriPermission(getPackageName(), imgURI, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -89,6 +98,21 @@ class MainActivity : AppCompatActivity() {
 
 
         }
+    }
+
+
+    private fun getRealPathFromURI(contentURI: Uri): String? {
+        val result: String?
+        val cursor: Cursor? = contentResolver.query(contentURI, null, null, null, null)
+        if (cursor == null) { // Source is Dropbox or other similar local file path
+            result = contentURI.path
+        } else {
+            cursor.moveToFirst()
+            val idx: Int = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA)
+            result = cursor.getString(idx)
+            cursor.close()
+        }
+        return result
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
